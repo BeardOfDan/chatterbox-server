@@ -238,6 +238,21 @@ describe('allow the user to get only the messages for a particular room', functi
 
 describe('Allow the user to delete messages', function() {
 
+  // a helper function
+  let includesMessage = function(arr, expected) {
+    for (let i = 0; i < arr.length; i++) {
+      const thisMessage = arr[i];
+      if (thisMessage.message === expected.message) {
+        if (thisMessage.username === expected.username) {
+          if (thisMessage.room === expected.room) {
+            return true;
+          }
+        }
+      }
+    }
+    return false;
+  };
+
   it('should delete only the messages identified in the url by message', function() {
     // issue 3 posts
     // 2 have the same message, 1 has another message
@@ -288,29 +303,11 @@ describe('Allow the user to delete messages', function() {
     var messages = JSON.parse(resGet._data).results;
 
     let includes = false;
-    // includes = (messages.indexOf(stubMsgWithRoom) > 0) ? true : false;
-
-    // a helper function
-    let includesMessage = function(arr, expected) {
-      for (let i = 0; i < arr.length; i++) {
-        const thisMessage = arr[i];
-        if (thisMessage.message === expected.message) {
-          if (thisMessage.username === expected.username) {
-            if (thisMessage.room === expected.room) {
-              return true;
-            }
-          }
-        }
-      }
-      return false;
-    };
 
     includes = includesMessage(messages, stubMsgWithRoom);
     
     // expect messages to include the messages that were added (for later deletion)
     expect(includes).to.equal(true);
-
-    // expect([{ id: 1 }]).to.deep.include.members([{ id: 1 }]);
 
     // simulate a DELETE request
 
@@ -343,7 +340,86 @@ describe('Allow the user to delete messages', function() {
 
 
   it('should delete only the messages identified in the url by user', function() {
+    var stubMsg = {
+      username: 'Jono',
+      message: 'Do my bidding!'
+    };
 
+    var stubMsgWithRoom = {
+      username: 'Jono',
+      message: 'Do my bidding!',
+      room: 'messages/'
+    };
+
+    // using our urls, we will get a 'room' property, so the below stubs are for deep equals comparisons
+
+    var otherMsg = {
+      username: 'notJono',
+      message: 'Do as you will'
+    };
+
+    var otherMsgWithRoom = {
+      username: 'notJono',
+      message: 'Do as you will',
+      room: 'messages/'
+    };
+
+    // simulate POST requests
+
+    let reqPost = new stubs.request('/classes/messages/', 'POST', stubMsg);
+    let resPost = new stubs.response();
+    handler.requestHandler(reqPost, resPost);
+
+    reqPost = new stubs.request('/classes/messages/', 'POST', stubMsg);
+    resPost = new stubs.response();
+    handler.requestHandler(reqPost, resPost);
+
+    reqPost = new stubs.request('/classes/messages', 'POST', otherMsg);
+    resPost = new stubs.response();
+    handler.requestHandler(reqPost, resPost);
+
+    // simulate a GET request
+
+    let reqGet = new stubs.request('/classes/messages/', 'GET');
+    let resGet = new stubs.response();
+    handler.requestHandler(reqGet, resGet);
+
+    var messages = JSON.parse(resGet._data).results;
+
+    let includes = false;
+
+
+    includes = includesMessage(messages, stubMsgWithRoom);
+    
+    // expect messages to include the messages that were added (for later deletion)
+    expect(includes).to.equal(true);
+
+
+    // simulate a DELETE request
+    
+    let reqDelete = new stubs.request(`/classes/user/${stubMsg.username}`, 'DELETE');
+    let resDelete = new stubs.response();
+    handler.requestHandler(reqDelete, resDelete);
+
+    // simulate a GET request
+
+    reqGet = new stubs.request('/classes/messages/', 'GET');
+    resGet = new stubs.response();
+    handler.requestHandler(reqGet, resGet);
+
+    messages = JSON.parse(resGet._data).results;    
+
+    includes = false;
+    includes = includesMessage(messages, otherMsgWithRoom);
+
+    // expect for it to still include the non-deleated data
+    expect(includes).to.equal(true);
+
+    includes = false;
+    // check if it does NOT include stubMsgWithRoom
+    includes = !includesMessage(messages, stubMsgWithRoom);  
+
+    expect(includes).to.equal(true);
   });
 
 });

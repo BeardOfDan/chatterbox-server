@@ -48,7 +48,18 @@ class Messages {
   }
 
   getRoom(room) {
-    // filter by room and return
+    // declare an output array
+    var output = [];
+    // iterate through this.arr
+    this.arr.forEach(function(message) {
+      // if message.room === room
+      if (message.room === room) {
+        //push message into output array
+        output.push(message);
+      }
+    });
+    // return output
+    return output;
   }
 
   getUser(userName) {
@@ -102,6 +113,8 @@ var requestHandler = function(request, response) {
   // Documentation for both request and response can be found in the HTTP section at
   // http://nodejs.org/documentation/api/
 
+  console.log('url', request.url);
+
   // Do some basic logging.
   //
   // Adding more logging to your server can be an easy way to get passive
@@ -147,6 +160,12 @@ var requestHandler = function(request, response) {
       response.end('' + JSON.stringify({
         results: messages.getMessages()
       }));
+    } else if (request.url.slice(0, 9) === '/classes/') {
+      let roomName = request.url.slice(9);
+      response.writeHead(statusCode, headers);
+      response.end('' + JSON.stringify({
+        results: messages.getRoom(roomName)
+      }));
     } else {
       response.writeHead(404, headers);
       response.end('Page not found: ' + request.url);
@@ -179,9 +198,9 @@ var requestHandler = function(request, response) {
       //   response.writeHead(201, headers);
       //   response.end('' + JSON.stringify({results: messages}));
       // });
-    } else if (request.url.slice(0, 0) === '/classes/') {
+    } else if (request.url.slice(0, 9) === '/classes/') {
 
-      // console.log('url', request.url);
+      console.log('url', request.url);
 
       let body = [];
       request.on('data', (chunk) => {
@@ -193,7 +212,7 @@ var requestHandler = function(request, response) {
         // body = parse
         body = JSON.parse(body);
         // other 3 lines
-        messages.push(body, request.url.slice());
+        messages.push(body, request.url.slice(9));
         response.writeHead(201, headers);
         response.end('' + JSON.stringify({results: messages.getMessages()}));
       });      

@@ -117,3 +117,136 @@ describe('Node Server Request Listener Function', function() {
   });
 
 });
+
+// handle tests for if the user is in a particular room
+// the most recent message added (was added with a room) has a 'room' attribute
+// the most recent message added (was NOT added with a room) does NOT have a 'room' attribute
+// the most recent message added (was added with a room) has the expected value for its 'room' attribute
+describe('messages can have a room', function() {
+
+  it('has a room', function() {
+  // add
+    var stubMsg = {
+      username: 'Jono',
+      message: 'Do my bidding!'
+    };
+    var reqPost = new stubs.request('/classes/room', 'POST', stubMsg);
+    var resPost = new stubs.response();
+    handler.requestHandler(reqPost, resPost);
+
+    var reqGet = new stubs.request('/classes/messages', 'GET');
+    var resGet = new stubs.response();
+    handler.requestHandler(reqGet, resGet);
+
+    var messages = JSON.parse(resGet._data).results;
+    expect(messages[messages.length - 1].room).to.be.a('string');
+  });
+
+  it('does not have a room', function() {
+  
+    var stubMsg = {
+      username: 'Jono',
+      message: 'Do my bidding!'
+    };
+    var reqPost = new stubs.request('/classes/messages', 'POST', stubMsg);
+    var resPost = new stubs.response();
+    handler.requestHandler(reqPost, resPost);
+
+    var reqGet = new stubs.request('/classes/messages', 'GET');
+    var resGet = new stubs.response();
+    handler.requestHandler(reqGet, resGet);
+
+    var messages = JSON.parse(resGet._data).results;
+    expect(messages[messages.length - 1].room).to.equal(undefined);
+
+  });
+
+  it('has a room with the value we would expect', function() {
+    
+    var stubMsg = {
+      username: 'Jono',
+      message: 'Do my bidding!'
+    };
+    var reqPost = new stubs.request('/classes/room', 'POST', stubMsg);
+    var resPost = new stubs.response();
+    handler.requestHandler(reqPost, resPost);
+
+    var reqGet = new stubs.request('/classes/messages', 'GET');
+    var resGet = new stubs.response();
+    handler.requestHandler(reqGet, resGet);
+
+    var messages = JSON.parse(resGet._data).results;
+    expect(messages[messages.length - 1].room).to.equal('room');
+    
+  });
+
+});
+
+
+// allow the user to get just the messages for a particular room
+describe('allow the user to get only the messages for a particular room', function() {
+
+  before( function() {
+    var stubMsg = {
+      username: 'Jono',
+      message: 'Do my bidding!'
+    };
+
+    var otherMsg = {
+      username: 'otherName',
+      message: 'otherMessage'
+    };
+
+    var reqPost = new stubs.request('/classes/thisRoom', 'POST', stubMsg);
+    var resPost = new stubs.response();
+    handler.requestHandler(reqPost, resPost);
+
+    reqPost = new stubs.request('/classes/notThisRoom', 'POST', otherMsg);
+    resPost = new stubs.response();
+    handler.requestHandler(reqPost, resPost);
+
+    reqPost = new stubs.request('/classes/thisRoom', 'POST', stubMsg);
+    resPost = new stubs.response();
+    handler.requestHandler(reqPost, resPost);
+
+  });
+
+  it('does get messages with a particular room', function() {
+  
+    var reqGet = new stubs.request('/classes/thisRoom', 'GET');
+    var resGet = new stubs.response();
+    handler.requestHandler(reqGet, resGet);
+
+    var messages = JSON.parse(resGet._data).results;
+
+    expect(messages.length).to.equal(2);    
+
+    expect(messages[0]).to.eql({
+      username: 'Jono',
+      message: 'Do my bidding!',
+      room: 'thisRoom'
+    });
+
+    expect(messages[1]).to.eql({
+      username: 'Jono',
+      message: 'Do my bidding!',
+      room: 'thisRoom'
+    });
+  });
+
+});
+
+
+
+
+// allow the user to update an existing message
+
+
+// allow the user to delete a message
+
+
+
+// XSS proof the code (escape everything) then test that
+
+
+

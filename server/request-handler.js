@@ -320,6 +320,22 @@ var requestHandler = function(request, response) {
             'urlStructure': '/classes/messages/ThisRoom'
           },
           'example2Outcome': 'This will produce the same result as the previous, with the addition of a room property of "ThisRoom"'
+        },
+        'DELETE': {
+          'description': 'Deletes all messages that match the description',
+          'parameters': false,
+          'urlStructure': {
+            '/classes/message': 'deletes messages whos "message" property matches the rest of the url',
+            '/classes/uere': 'deletes messages whos "username" property matches teh rest of the url'
+          },
+          'example1': {
+            'urlStructure': '/classes/messageASDF'
+          },
+          'example1Outcome': 'any message whos "message" property is "ASDF" will be erased',
+          'example2': {
+            'urlStructure': '/classes/userThisGuy'
+          },
+          'example2Outcome': 'any message with the username of "ThisGuy" will be erased'
         }
       }
     ));

@@ -12,6 +12,8 @@ this file and include it in basic-server.js so that it actually works.
 
 **************************************************************/
 
+const querystring = require('querystring');
+
 var defaultCorsHeaders = {
   'access-control-allow-origin': '*',
   'access-control-allow-methods': 'GET, POST, PUT, DELETE, OPTIONS',
@@ -199,9 +201,6 @@ var requestHandler = function(request, response) {
       //   response.end('' + JSON.stringify({results: messages}));
       // });
     } else if (request.url.slice(0, 9) === '/classes/') {
-
-      console.log('url', request.url);
-
       let body = [];
       request.on('data', (chunk) => {
         body.push(chunk);
@@ -219,6 +218,47 @@ var requestHandler = function(request, response) {
     } else {
       response.writeHead(404, headers);
       response.end('Page not found: ' + request.url);
+    }
+  } else if (request.method === 'DELETE') {
+    var isDeleted = false;
+
+    if (request.url.slice(0, 17) === '/classes/message/') {
+      var messageToDelete = querystring.unescape(request.url.slice(17));
+      // iterate through message array
+      var nonDeleted = [];
+
+      for (let i = 0; i < messages.arr.length; i++) {
+        const thisMessage = messages.arr[i];
+
+        if (thisMessage.message !== messageToDelete) {
+          nonDeleted.push(thisMessage);
+        } else {
+          isDeleted = true;
+        }
+      }
+
+      messages.arr = nonDeleted;
+    } else if (request.url.slice(0, 14) === '/classes/user/') {
+      var userToDelete = querystring.unescape(request.url.slice(14));
+      var nonDeleted = [];
+
+      for (let i = 0; i < messages.arr.length; i++) {
+        const thisMessage = messages.arr[i];
+
+        if (thisMessage.username !== userToDelete) {
+          nonDeleted.push(thisMessage);
+        } else {
+          isDeleted = true;
+        }
+      }
+      
+      messages.arr = nonDeleted;
+    }
+
+    if (isDeleted === true) {
+      response.end('Your deletion has occurred');
+    } else {
+      response.end('Could not find any matching data');
     }
   }
 };

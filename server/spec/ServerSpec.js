@@ -238,11 +238,29 @@ describe('allow the user to get only the messages for a particular room', functi
 
 
 
+// allow the user to delete a message
+  // at least allow for deletion by message and/or username
+  // this will allow us to remove the test data 
+    // which is especially good for when we add in message persistance below
+    // possibly do a path for 'DELETE', '/testData' (instead of messages), to delete every instance of test data
+  // other path: 'DELETE', '/classes/message/MessageTextHere' && '/classes/user/UserNameHere'
+  // NOTE: this method is good for us deleting hardcoded data, but bad for a user deleting dynamic data
+
+
+// if the user goes to the url http://127.0.0.1:3000, then they will get an html page back
+  // this way they actually have the client side interface
+
+
+// save the data to a file (and on startup, read that file or create it, if it does not exist)
+  // this way we will have our data even after we shut down the server
+
+
+
+
 
 // allow the user to update an existing message
 
 
-// allow the user to delete a message
 
 
 

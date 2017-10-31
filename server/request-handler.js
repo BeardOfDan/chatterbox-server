@@ -158,7 +158,12 @@ var requestHandler = function(request, response) {
 
 
   if (request.method === 'GET') {
-    if (request.url === '/classes/messages') {
+    if (request.url.slice(0, 10) === '?username=') {
+      
+      response.writeHead(statusCode, headers);
+      response.end(JSON.stringify({'key': 'value'}));
+
+    } else if (request.url === '/classes/messages') {
       response.writeHead(statusCode, headers);
       response.end('' + JSON.stringify({
         results: messages.getMessages()
@@ -182,8 +187,13 @@ var requestHandler = function(request, response) {
 
 
     } else if (request.url.slice(0, 11) === '/?username=') {
-      response.writeHead(statusCode, headers);
-      response.end('You are someone who has the index.html page loaded and is requesting stuff');
+      // response.writeHead(statusCode, headers);
+      // response.end('You are someone who has the index.html page loaded and is requesting stuff');
+      
+      response.writeHead(200, {'Content-Type': 'text/html'});
+
+      var readStream = fs.createReadStream(__dirname + '/../client/index.html');
+      readStream.pipe(response);
     } else {
       response.writeHead(404, headers);
       response.end('Page not found: ' + request.url);
@@ -267,6 +277,52 @@ var requestHandler = function(request, response) {
     } else {
       response.end('Could not find any matching data');
     }
+  } else if (request.method === 'OPTIONS') {
+    response.writeHead(statusCode, headers);
+    response.end(JSON.stringify(
+      {
+        'GET': {
+          'description': 'Get messages',
+          'parameters': false,
+          'urlStructure': {
+            '/classes/messages': 'returns all messages',
+            '/classes/': 'returns all messages from the room whos name matches the following portion of the url'
+          },
+          'example': {
+            'url': '/classes/messages'
+          }
+        },
+        'POST': {
+          'description': 'Send a message',
+          'parameters': {
+            'message': {
+              'message': 'The body of the message',
+              'username': 'The author of the message'
+            }
+          },
+          'urlStructure': {
+            '/classes/messages': 'sends a message that will not get a room property added',
+            '/classes/': 'sends a message that will get a room property with the value of the remainder of the url'
+          },
+          'example1': {
+            'message': {
+              'message': 'Hello World!',
+              'username': 'A Programmer'
+            },
+            'urlStructure': '/classes/messages'
+          },
+          'example1Outcome': 'This will post a message that will not have a room property',
+          'example2': {
+            'message': {
+              'message': 'Hello World!',
+              'username': 'A Programmer'
+            },
+            'urlStructure': '/classes/messages/ThisRoom'
+          },
+          'example2Outcome': 'This will produce the same result as the previous, with the addition of a room property of "ThisRoom"'
+        }
+      }
+    ));
   }
 };
 

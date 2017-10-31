@@ -156,9 +156,12 @@ var requestHandler = function(request, response) {
       let body = [];
       request.on('data', (chunk) => {
         body.push(chunk);
-      }).on('end', () => {
-        body = Buffer.concat(body).toString();
+      });
+      request.on('end', () => {
+        // body = Buffer.concat(body).toString();
         // at this point, `body` has the entire request body stored in it as a string
+
+        body = body.join('');
 
         body = JSON.parse(body);
 
@@ -183,8 +186,9 @@ var requestHandler = function(request, response) {
       let body = [];
       request.on('data', (chunk) => {
         body.push(chunk);
-      }).on('end', () => {
-        body = Buffer.concat(body).toString();
+      });
+      request.on('end', () => {
+        body = body.join('');
         // at this point, `body` has the entire request body stored in it as a string
         // body = parse
         body = JSON.parse(body);

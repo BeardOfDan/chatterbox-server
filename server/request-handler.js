@@ -70,7 +70,7 @@ class Messages {
 
   // add a new message to the array
   push(message, room) {
-    if (room) {
+    if (room !== undefined) {
       message.room = room.toString();
     }
 

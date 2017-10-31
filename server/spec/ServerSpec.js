@@ -236,7 +236,117 @@ describe('allow the user to get only the messages for a particular room', functi
 
 });
 
+describe('Allow the user to delete messages', function() {
 
+  it('should delete only the messages identified in the url by message', function() {
+    // issue 3 posts
+    // 2 have the same message, 1 has another message
+    // the username
+
+    var stubMsg = {
+      username: 'Jono',
+      message: 'Do my bidding!'
+    };
+
+    var stubMsgWithRoom = {
+      username: 'Jono',
+      message: 'Do my bidding!',
+      room: 'messages/'
+    };
+
+    var otherMsg = {
+      username: 'notJono',
+      message: 'Do as you will'
+    };
+
+    var otherMsgWithRoom = {
+      username: 'notJono',
+      message: 'Do as you will',
+      room: 'messages/'
+    };
+
+    // simulate POST requests
+
+    var reqPost = new stubs.request('/classes/messages/', 'POST', stubMsg);
+    var resPost = new stubs.response();
+    handler.requestHandler(reqPost, resPost);
+
+    reqPost = new stubs.request('/classes/messages/', 'POST', otherMsg);
+    resPost = new stubs.response();
+    handler.requestHandler(reqPost, resPost);
+    
+    reqPost = new stubs.request('/classes/messages/', 'POST', stubMsg);
+    resPost = new stubs.response();
+    handler.requestHandler(reqPost, resPost);
+
+    // simulate a GET request
+
+    var reqGet = new stubs.request('/classes/messages/', 'GET');
+    var resGet = new stubs.response();
+    handler.requestHandler(reqGet, resGet);
+
+    var messages = JSON.parse(resGet._data).results;
+
+    let includes = false;
+    // includes = (messages.indexOf(stubMsgWithRoom) > 0) ? true : false;
+
+    // a helper function
+    let includesMessage = function(arr, expected) {
+      for (let i = 0; i < arr.length; i++) {
+        const thisMessage = arr[i];
+        if (thisMessage.message === expected.message) {
+          if (thisMessage.username === expected.username) {
+            if (thisMessage.room === expected.room) {
+              return true;
+            }
+          }
+        }
+      }
+      return false;
+    };
+
+    includes = includesMessage(messages, stubMsgWithRoom);
+    
+    // expect messages to include the messages that were added (for later deletion)
+    expect(includes).to.equal(true);
+
+    // expect([{ id: 1 }]).to.deep.include.members([{ id: 1 }]);
+
+    // simulate a DELETE request
+
+    var reqDelete = new stubs.request(`/classes/message/${stubMsg.message}`, 'DELETE');
+    var resDelete = new stubs.response();
+    handler.requestHandler(reqDelete, resDelete);
+
+    // simulate a GET request
+
+    reqGet = new stubs.request('/classes/messages/', 'GET');
+    resGet = new stubs.response();
+    handler.requestHandler(reqGet, resGet);
+
+    messages = JSON.parse(resGet._data).results;
+
+    includes = false;
+    includes = includesMessage(messages, otherMsgWithRoom);
+
+    // expect messages to include the message that was not deleted
+    expect(includes).to.equal(true);
+
+    includes = false;
+    // does NOT include
+    includes = !includesMessage(messages, stubMsgWithRoom);
+
+    // expect for it to be true that messages does NOT include the deleted messages
+    expect(includes).to.equal(true);
+
+  });
+
+
+  it('should delete only the messages identified in the url by user', function() {
+
+  });
+
+});
 
 // allow the user to delete a message
   // at least allow for deletion by message and/or username

@@ -13,6 +13,7 @@ this file and include it in basic-server.js so that it actually works.
 **************************************************************/
 
 const querystring = require('querystring');
+const fs = require('fs');
 
 var defaultCorsHeaders = {
   'access-control-allow-origin': '*',
@@ -168,6 +169,21 @@ var requestHandler = function(request, response) {
       response.end('' + JSON.stringify({
         results: messages.getRoom(roomName)
       }));
+    } else if (request.url === '/') {
+      // give them the index.html page
+      // response.writeHead(statusCode, headers);
+      // response.end('' + 'Display the index page');
+
+      response.writeHead(200, {'Content-Type': 'text/html'});
+
+      var readStream = fs.createReadStream(__dirname + '/../client/index.html');
+      // We replaced all the event handlers with a simple call to readStream.pipe()
+      readStream.pipe(response);
+
+
+    } else if (request.url.slice(0, 11) === '/?username=') {
+      response.writeHead(statusCode, headers);
+      response.end('You are someone who has the index.html page loaded and is requesting stuff');
     } else {
       response.writeHead(404, headers);
       response.end('Page not found: ' + request.url);
@@ -179,9 +195,6 @@ var requestHandler = function(request, response) {
         body.push(chunk);
       });
       request.on('end', () => {
-        // body = Buffer.concat(body).toString();
-        // at this point, `body` has the entire request body stored in it as a string
-
         body = body.join('');
 
         body = JSON.parse(body);
@@ -194,12 +207,6 @@ var requestHandler = function(request, response) {
 
         response.end('' + JSON.stringify({results: previousMessages}));
       });
-      // request.on('data', function(data) {
-      //   console.log(data);
-      //   messages.push(data);
-      //   response.writeHead(201, headers);
-      //   response.end('' + JSON.stringify({results: messages}));
-      // });
     } else if (request.url.slice(0, 9) === '/classes/') {
       let body = [];
       request.on('data', (chunk) => {

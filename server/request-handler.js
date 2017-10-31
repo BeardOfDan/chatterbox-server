@@ -19,7 +19,78 @@ var defaultCorsHeaders = {
   'access-control-max-age': 10 // Seconds.
 };
 
-var messages = [];
+// var messages = [];
+
+
+// class Message {
+//   constructor(message, room = null) {
+//     this.content = message;
+
+//     this.room = room;
+//   }
+
+//   get() {
+//     return this.content;
+//   }
+// }
+
+
+
+
+
+class Messages {
+  constructor() {
+    this.arr = [];
+  }
+
+  getMessages() {
+    return this.arr;
+  }
+
+  getRoom(room) {
+    // filter by room and return
+  }
+
+  getUser(userName) {
+    // filter by username and return
+  }
+
+  // add a new message to the array
+  push(message, room) {
+    if (room) {
+      message.room = room.toString();
+    }
+
+    this.arr.push(message);
+  }
+
+}
+
+const messages = new Messages();
+// messages.arr = [];
+
+// messages.getMessages = function() {
+//   let result = [];
+  
+//   for (let i = 0; i < this.arr.length; i++) {
+//     result.push(this.arr[i].get());
+//   }
+
+//   return result;
+// };
+
+
+
+// const getMessages = function() {
+//   let result = [];
+  
+//   for (let i = 0; i < messages.length; i++) {
+//     result.push(messages[i].get());
+//   }
+
+//   return result;
+// };
+
 
 var requestHandler = function(request, response) {
   // Request and Response come from node's http module.
@@ -67,12 +138,14 @@ var requestHandler = function(request, response) {
    //      body += data;
    //  });
 
+  // console.log('requests', request.url, request.method, '\n\n');
+
 
   if (request.method === 'GET') {
     if (request.url === '/classes/messages') {
       response.writeHead(statusCode, headers);
       response.end('' + JSON.stringify({
-        results: messages
+        results: messages.getMessages()
       }));
     } else {
       response.writeHead(404, headers);
@@ -86,12 +159,16 @@ var requestHandler = function(request, response) {
       }).on('end', () => {
         body = Buffer.concat(body).toString();
         // at this point, `body` has the entire request body stored in it as a string
-        // body = parse
+
         body = JSON.parse(body);
-        // other 3 lines
+
         messages.push(body);
         response.writeHead(201, headers);
-        response.end('' + JSON.stringify({results: messages}));
+
+        let previousMessages = messages.getMessages();
+        previousMessages = previousMessages.slice(0, previousMessages.length - 1);
+
+        response.end('' + JSON.stringify({results: previousMessages}));
       });
       // request.on('data', function(data) {
       //   console.log(data);
@@ -99,6 +176,23 @@ var requestHandler = function(request, response) {
       //   response.writeHead(201, headers);
       //   response.end('' + JSON.stringify({results: messages}));
       // });
+    } else if (request.url.slice(0, 0) === '/classes/') {
+
+      // console.log('url', request.url);
+
+      let body = [];
+      request.on('data', (chunk) => {
+        body.push(chunk);
+      }).on('end', () => {
+        body = Buffer.concat(body).toString();
+        // at this point, `body` has the entire request body stored in it as a string
+        // body = parse
+        body = JSON.parse(body);
+        // other 3 lines
+        messages.push(body, request.url.slice());
+        response.writeHead(201, headers);
+        response.end('' + JSON.stringify({results: messages.getMessages()}));
+      });      
     } else {
       response.writeHead(404, headers);
       response.end('Page not found: ' + request.url);
@@ -118,4 +212,4 @@ var requestHandler = function(request, response) {
 // Another way to get around this restriction is to serve you chat
 // client from this domain by setting up static file serving.
 
-exports.handleRequest = requestHandler;
+exports.requestHandler = requestHandler;
